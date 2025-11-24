@@ -11,11 +11,14 @@ WINDOWS: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## 2. Setup database
+## 2. Setup database and password
 ```
 createdb my_company
 LINUX: export DATABASE_URL="postgresql://user:pass@localhost/my_company"
 WINDOWS: $env:DATABASE_URL="postgresql://user:pass@localhost/my_company"
+
+LINUX: export PSQL_PASS="<your_password>"
+WINDOWS: $env:PSQL_PASS="<your_password>"
 ```
 ## 3. Load schema and your additions
 ```
