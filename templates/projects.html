@@ -12,8 +12,8 @@
 
       <!-- TABS -->
       <div class="tabs">
-          <button class="tab-hovered" onclick="location.href='/'">Employees</button>
-          <button class="tab" onclick="location.href='/projects'">Projects</button>
+          <button class="tab" onclick="location.href='/'">Employees</button>
+          <button class="tab-hovered" onclick="location.href='/projects'">Projects</button>
           <button class="tab" onclick="location.href='/departments'">Departments</button>
           <button class="tab" onclick="location.href='/employee_management'">Employee Management</button>
       </div>
@@ -29,8 +29,6 @@
         {% endif %}
       </div>
     </div>
-
-    <div class="spacer"></div>
 
     <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}

@@ -33,6 +33,31 @@ def home():
                                  title="Home Page", 
                                  user=logged_in_user
                                  )
+
+# projects route
+@app.route("/projects")
+def projects():
+    
+    return render_template("projects.html", 
+                                 title="Projects Page", 
+                                 user=logged_in_user
+                                 )
+    
+# departments route
+@app.route("/departments")
+def departments():
+    return render_template("departments.html", 
+                                 title="Departments Page", 
+                                 user=logged_in_user
+                                 )
+    
+# employee management route
+@app.route("/employee_management")
+def employee_management():
+    return render_template("management.html", 
+                                 title="Employee Management Page", 
+                                 user=logged_in_user
+                                 )
     
 # --- LOGIN AND REGISTER ---
 
