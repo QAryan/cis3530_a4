@@ -120,3 +120,51 @@ def validate_sort_parameters(sort_by, order):
         order = 'DESC'
     
     return sort_by, order.upper()
+
+
+def get_all_employees(conn):
+    """Return list of all employees for dropdown selection.
+    Each item: { 'ssn': str, 'full_name': 'Last, First' }
+    """
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT Ssn, Fname, Lname
+        FROM Employee
+        ORDER BY Lname, Fname
+        """
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    return [{
+        'ssn': r[0],
+        'full_name': f"{r[2]}, {r[1]}"
+    } for r in rows]
+
+
+def upsert_assignment(conn, essn: str, pno: int, hours: float):
+    """Atomically insert or add hours for an employee on a project.
+
+    Uses INSERT ... ON CONFLICT (Essn, Pno) DO UPDATE to add hours.
+    """
+    if hours is None:
+        raise ValueError("Hours is required")
+    try:
+        hours_val = float(hours)
+    except (TypeError, ValueError):
+        raise ValueError("Hours must be a number")
+    if hours_val <= 0:
+        raise ValueError("Hours must be greater than 0")
+
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO Works_On (Essn, Pno, Hours)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (Essn, Pno)
+        DO UPDATE SET Hours = Works_On.Hours + EXCLUDED.Hours
+        """,
+        (essn, pno, hours_val)
+    )
+    conn.commit()
+    cursor.close()

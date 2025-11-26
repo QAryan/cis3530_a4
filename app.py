@@ -250,31 +250,44 @@ def projects_list():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# project details route
-@app.route("/projects/<int:project_id>")
+# project details route + assignment upsert
+@app.route("/projects/<int:project_id>", methods=["GET", "POST"])
 def project_details(project_id):
     try:
-        # setup db
         conn = get_db_connection()
-        
-        # Get project details using the projects module
+
+        if request.method == "POST":
+            essn = request.form.get("essn", "").strip()
+            hours = request.form.get("hours", "").strip()
+            try:
+                projects.upsert_assignment(conn, essn, project_id, hours)
+                flash("Assignment saved successfully.", "success")
+            except Exception as up_e:
+                conn.rollback()
+                flash(str(up_e), "error")
+            finally:
+                conn.close()
+            return redirect(url_for("project_details", project_id=project_id))
+
+        # GET: fetch project + employees + list of all employees for dropdown
         project_data = projects.get_project_details(conn, project_id)
-        
         if not project_data:
             conn.close()
             flash("Project not found!", "error")
             return redirect(url_for("projects_list"))
-        
-        # Get employees assigned to this project
+
         employees_list = projects.get_project_employees(conn, project_id)
-        
+        all_employees = projects.get_all_employees(conn)
         conn.close()
-        
-        return render_template("project_details.html",
-                             title=f"Project: {project_data['pname']}",
-                             project=project_data,
-                             employees=employees_list,
-                             user=logged_in_user)
+
+        return render_template(
+            "project_details.html",
+            title=f"Project: {project_data['pname']}",
+            project=project_data,
+            employees=employees_list,
+            all_employees=all_employees,
+            user=logged_in_user,
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     

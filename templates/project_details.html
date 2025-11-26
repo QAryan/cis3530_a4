@@ -89,18 +89,14 @@
             <table>
                 <thead>
                     <tr>
-                        <th>SSN</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
+                        <th>Employee</th>
                         <th class="num">Hours Worked</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for emp in employees %}
                     <tr>
-                        <td>{{ emp.ssn }}</td>
-                        <td>{{ emp.fname }}</td>
-                        <td>{{ emp.lname }}</td>
+                        <td>{{ emp.fname }} {{ emp.lname }}</td>
                         <td class="num">{{ "%.2f"|format(emp.hours) }}</td>
                     </tr>
                     {% endfor %}
@@ -109,6 +105,32 @@
         {% else %}
             <p>No employees assigned to this project.</p>
         {% endif %}
+
+        <div class="details-card" style="margin-top:14px;">
+            <h3 style="margin:0 0 12px;">Assign or Add Hours</h3>
+            <form method="POST" action="">
+                <div class="info-row">
+                    <div class="info-label">Employee</div>
+                    <div class="info-value">
+                        <select name="essn" required style="width: 260px; padding: 6px;">
+                            {% for e in all_employees %}
+                                <option value="{{ e.ssn }}">{{ e.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Hours to Add</div>
+                    <div class="info-value">
+                        <input type="number" name="hours" min="0.1" step="0.1" required style="width: 120px; padding: 6px;" />
+                        <span style="color:#666; margin-left:8px;">Adds to existing hours if already assigned.</span>
+                    </div>
+                </div>
+                <div style="text-align:right; margin-top:8px;">
+                    <button type="submit" class="login-button">Save Assignment</button>
+                </div>
+            </form>
+        </div>
     {% else %}
         <p>Project not found.</p>
     {% endif %}
