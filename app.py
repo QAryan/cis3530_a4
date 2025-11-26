@@ -105,9 +105,47 @@ def empty_home():
 # departments route
 @app.route("/departments")
 def departments():
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    deptQuery = """
+    select 
+    dname,
+    dnumber,
+    CASE
+        WHEN concat(fname,' ',minit,'. ' ,lname) = ' . ' THEN 'N/A'
+        ELSE concat(fname,' ',minit,'. ' ,lname)
+        END AS full_name,
+    number_of_employees,
+    coalesce(total.total_hours,0)
+    from department
+    left join employee
+    on department.mgr_ssn = employee.ssn
+    left join
+    (select dno, count(dno) as number_of_employees
+    from employee
+    group by(dno)
+    having count(dno) >= 1) as e on department.dnumber = e.dno
+    left join
+    (select sum(hours)as total_hours, dnum from
+    (select hours,dnum,dname from works_on as w
+    left join project as p on w.pno =p.pnumber
+    left join department as d on p.dnum = d.dnumber)
+    group by dnum) as total on total.dnum = department.dnumber"""
+    # setup db
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(deptQuery)
+    rows = cursor.fetchall()
+    departments = [
+                    {"Dname": r[0], "Dnumber": r[1], "MgrName": r[2], "NumEmployees": r[3], "TotalHours": r[4]} for r in rows
+                ]
+    cursor.close()
+    conn.close()
+
     return render_template("departments.html", 
                                  title="Departments Page", 
-                                 user=logged_in_user
+                                 user=logged_in_user,
+                                    departments=departments
                                  )
     
 # employee management route
