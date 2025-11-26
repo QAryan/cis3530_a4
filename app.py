@@ -84,7 +84,8 @@ def home():
     departments = [r[0] for r in deptRows]
     cursor.close()
     conn.close()
-    
+    if sort_by == "coalesce(total_hours,0)":
+       sort_by = "total_hours"
     return render_template("home.html", 
                                  title="Home Page", 
                                  user=logged_in_user,
