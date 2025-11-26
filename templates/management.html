@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <div class="header">
+      <h1 class="title">MyCompany</h1>
+
+      <!-- TABS -->
+      <div class="tabs">
+          <button class="tab" onclick="location.href='/'">Employees</button>
+          <button class="tab" onclick="location.href='/projects'">Projects</button>
+          <button class="tab" onclick="location.href='/departments'">Departments</button>
+          <button class="tab-hovered" onclick="location.href='/employee_management'">Employee Management</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="login-section">
+        {% if user == None %}
+            <button class="login-button" onclick="location.href='/login'">Login</button>
+            <p>or</p>
+            <button class="login-button" onclick="location.href='/register'">Register</button>
+        {% else %}
+            <p class="login-user">{{ user.name }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+</body>
+</html>

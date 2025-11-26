@@ -3,11 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Login Page</title>
 </head>
 <body>
-    <h1>Login</h1>
-    
+    <div class="login-form-container">
+      <h1 class="login-form-title">Login</h1>
+
+      <form method="POST" action="/login">
+          <label class="login-form-label" for="username">Username:</label>
+          <input class="login-form-input" type="text" id="username" name="username" required><br>
+
+          <label class="login-form-label" for="password">Password:</label>
+          <input class="login-form-input" type="password" id="password" name="password" required><br>
+
+          <button class="login-form-button" type="submit">Login</button>
+      </form>
+      <a class="login-form-link" href="/">Cancel</a>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flashes">
@@ -17,15 +31,5 @@
         </ul>
       {% endif %}
     {% endwith %}
-
-    <form method="POST" action="/login">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-
-        <button type="submit">Login</button>
-    </form>
 </body>
 </html>

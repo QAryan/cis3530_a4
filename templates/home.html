@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>{{ title }}</title>
 </head>
 <body>
-    <h1>Home</h1>
+    <div class="header">
+      <h1 class="title">MyCompany</h1>
 
+      <!-- TABS -->
+      <div class="tabs">
+          <button class="tab-hovered" onclick="location.href='/'">Employees</button>
+          <button class="tab" onclick="location.href='/projects'">Projects</button>
+          <button class="tab" onclick="location.href='/departments'">Departments</button>
+          <button class="tab" onclick="location.href='/employee_management'">Employee Management</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="login-section">
+        {% if user == None %}
+            <button class="login-button" onclick="location.href='/login'">Login</button>
+            <p>or</p>
+            <button class="login-button" onclick="location.href='/register'">Register</button>
+        {% else %}
+            <p class="login-user">{{ user.name }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flashes">
@@ -17,12 +42,73 @@
         </ul>
       {% endif %}
     {% endwith %}
+    <body>
 
-    {% if user == None %}
-        <button onclick="location.href='/login'">Login</button>
-        <button onclick="location.href='/register'">Register</button>
-    {% else %}
-        <p>Welcome, {{ user.name }}!</p>
-    {% endif %}
+    <h1>Employees</h1>
+      <form method="get" action="{{ url_for('home') }}" id="filterForm">
+    <!-- Department Filter -->
+    <label for="department">Filter by Department:</label>
+    <select name="department" id="department">
+        <option value="All" {% if selected_department == 'All' %}selected{% endif %}>All</option>
+        {% for dept in departments %}
+            <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Name Search -->
+    <label for="name">Search by Name:</label>
+    <input type="text" name="name" id="name" value="{{ name_search }}" placeholder="Enter name...">
+
+    <!-- Sorting Options -->
+    <label for="sort_by">Sort by:</label>
+    <select name="sort_by" id="sort_by">
+        <option value="full_name" {% if sort_by=='full_name' %}selected{% endif %}>Name</option>
+        <option value="total_hours" {% if sort_by=='total_hours' %}selected{% endif %}>Hours</option>
+    </select>
+
+    <label for="sort_order">Order:</label>
+    <select name="sort_order" id="sort_order">
+        <option value="asc" {% if sort_order=='asc' %}selected{% endif %}>Ascending</option>
+        <option value="desc" {% if sort_order=='desc' %}selected{% endif %}>Descending</option>
+    </select>
+</form>
+    <table>
+        <tr>
+            <th>Full Name</th>
+            <th>Department</th>
+            <th>Dependents</th>
+            <th>Projects</th>
+            <th>Hours</th>
+        </tr>
+
+        {% for emp in employees %}
+        <tr>
+            <td>{{ emp.FullName }}</td>
+            <td>{{ emp.Department }}</td>
+            <td>{{ emp.Dependents }}</td>
+            <td>{{ emp.Projects }}</td>
+            <td>{{ emp.Hours }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+<script>
+    const form = document.getElementById('filterForm');
+
+    // Submit form whenever a filter or sort option changes
+    document.getElementById('department').addEventListener('change', () => form.submit());
+    document.getElementById('sort_by').addEventListener('change', () => form.submit());
+    document.getElementById('sort_order').addEventListener('change', () => form.submit());
+    function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Submit form after user stops typing for 300ms
+const nameInput = document.getElementById('name');
+nameInput.addEventListener('keyup', debounce(() => form.submit(), 300));
+</script>
 </body>
 </html>
