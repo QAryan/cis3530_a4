@@ -2,6 +2,7 @@ import os
 from psycopg import sql, connect, IntegrityError
 from flask import Flask, render_template, jsonify, request, flash, url_for, redirect
 from werkzeug.security import generate_password_hash, check_password_hash
+import projects
 
 # app initialization
 app = Flask(__name__)
@@ -135,6 +136,64 @@ def login_user():
         
     elif request.method == "GET":
         return render_template("login.html")
+
+# --- PROJECTS ---
+
+# projects list route
+@app.route("/projects")
+def projects_list():
+    # Get sort parameter from query string (default to headcount DESC)
+    sort_by = request.args.get('sort', 'headcount')
+    order = request.args.get('order', 'DESC')
+    
+    # Validate and sanitize sort parameters
+    sort_by, order = projects.validate_sort_parameters(sort_by, order)
+    
+    try:
+        # setup db
+        conn = get_db_connection()
+        
+        # Get all projects using the projects module
+        projects_data = projects.get_all_projects(conn, sort_by, order)
+        
+        conn.close()
+        
+        return render_template("projects.html",
+                             title="Projects",
+                             projects=projects_data,
+                             current_sort=sort_by,
+                             current_order=order,
+                             user=logged_in_user)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# project details route
+@app.route("/projects/<int:project_id>")
+def project_details(project_id):
+    try:
+        # setup db
+        conn = get_db_connection()
+        
+        # Get project details using the projects module
+        project_data = projects.get_project_details(conn, project_id)
+        
+        if not project_data:
+            conn.close()
+            flash("Project not found!", "error")
+            return redirect(url_for("projects_list"))
+        
+        # Get employees assigned to this project
+        employees_list = projects.get_project_employees(conn, project_id)
+        
+        conn.close()
+        
+        return render_template("project_details.html",
+                             title=f"Project: {project_data['pname']}",
+                             project=project_data,
+                             employees=employees_list,
+                             user=logged_in_user)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 def get_logged_in_user():
     return logged_in_user
