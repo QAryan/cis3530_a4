@@ -101,14 +101,6 @@ def empty_home():
                                  title="Home Page", 
                                  user=logged_in_user
                                  )
-# projects route
-@app.route("/projects")
-def projects():
-    
-    return render_template("projects.html", 
-                                 title="Projects Page", 
-                                 user=logged_in_user
-                                 )
     
 # departments route
 @app.route("/departments")
