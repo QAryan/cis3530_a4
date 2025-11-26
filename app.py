@@ -153,13 +153,279 @@ def departments():
                                     departments=departments
                                  )
     
-# employee management route
+# --- EMPLOYEEE MANAGEMENT ---
+
+# employee management routes
 @app.route("/employee_management")
 def employee_management():
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    
+    department = request.args.get("department") or ""
+    nameSearch = request.args.get("name") or ""
+    sort_by = request.args.get("sort_by") or "full_name"
+    sort_order = request.args.get("sort_order") or "asc"
+    
+    if department == "All":
+        department = ""
+    if sort_by == "total_hours":
+       sort_by = "total_hours"
+       
+    employee_query = sql.SQL("""select concat(fname,' ',minit,'. ' ,lname) as full_name,
+    dname as department,
+    coalesce(number_of_dependents,0) as dependents,
+    coalesce(number_of_projects,0),
+    coalesce(total_hours,0) as total_hours,
+    ssn
+    from employee
+    left join
+    (select essn, count(essn) as number_of_dependents
+    from dependent
+    group by(essn)
+    having count(essn) >= 1) as d on employee.ssn = d.essn
+    left join
+    department on employee.dno = department.dnumber
+    left join 
+    (select essn, count(essn) as number_of_projects
+    from works_on
+    group by(essn)
+    having count(essn) >= 1) as p on employee.ssn = p.essn
+    left join
+    (select essn, sum(hours) as total_hours
+    from works_on
+    group by(essn)) as h on h.essn = employee.ssn
+    where department.dname like {department}
+    and concat(fname,' ',minit,'. ' ,lname) ILIKE {nameSearch}
+    ORDER BY {sort_by} {sort_order};""").format(
+        sort_by=sql.Identifier(sort_by),
+        sort_order=sql.SQL(sort_order.upper()),
+        department=sql.Literal(f"%{department}%"),
+        nameSearch=sql.Literal(f"%{nameSearch}%") )
+    
+    departmentQuery = "select dname from department;"
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    
+     # setup db
+   
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(employee_query)
+    rows = cursor.fetchall()
+    employees = [
+                    {"FullName": r[0], "Department": r[1], "Dependents": r[2], "Projects": r[3], "Hours": r[4], "ssn": r[5]} for r in rows
+                ]
+    cursor.execute(departmentQuery)
+    deptRows = cursor.fetchall()
+    departments = [r[0] for r in deptRows]
+    cursor.close()
+    conn.close()
+    
+    if sort_by == "coalesce(total_hours,0)":
+         sort_by = "total_hours"
+    
     return render_template("management.html", 
-                                 title="Employee Management Page", 
-                                 user=logged_in_user
+                                    title="Employee Management",
+                                    user=logged_in_user,
+                                    employees=employees,
+                                    selected_department=department,
+                                    departments=departments,
+                                    name_search=nameSearch,
+                                    sort_by=sort_by,
+                                    sort_order=sort_order
                                  )
+    
+@app.route("/employee_management/add", methods=["GET", "POST"])
+def add_employee():
+    # if POST, try adding the employee
+    if request.method == "POST":
+        #get form data (there is a lot)
+        fname = request.form["fname"].strip()
+        minit = request.form["minit"].strip()
+        lname = request.form["lname"].strip()
+        ssn = request.form["ssn"].strip()
+        address = request.form["address"].strip()
+        sex = request.form["sex"].strip()
+        salary = request.form["salary"].strip()
+        super_ssn = request.form["super_ssn"].strip()
+        dno = request.form["dno"].strip()
+        bdate = request.form["bdate"].strip()
+        empdate = request.form["empdate"].strip()
+        
+        # validate form data
+        if not fname or not minit or not lname or not ssn or not address or not sex or not salary or not dno or not bdate or not empdate:
+            flash("All fields are required!", "error")
+            return render_template("add_employee.html")
+        
+        try:
+            # setup db
+            conn = get_db_connection()
+            cursor = conn.cursor() 
+            
+            # check ssn is unique
+            unique_ssn_query = "SELECT COUNT(*) FROM employee WHERE ssn = %s;"
+            cursor.execute(unique_ssn_query, (ssn,))
+            ssn_exists = cursor.fetchone()[0]
+            
+            if ssn_exists:
+                flash("SSN already exists!", "error")
+                cursor.close()
+                conn.close()
+                return render_template("add_employee.html")
+            
+            # check supervisor exists
+            if super_ssn:
+                supervisor_query = "SELECT COUNT(*) FROM employee WHERE ssn = %s;"
+                cursor.execute(supervisor_query, (super_ssn,))
+                supervisor_exists = cursor.fetchone()[0]
+                
+                if not supervisor_exists:
+                    flash("Supervisor SSN does not exist!", "error")
+                    cursor.close()
+                    conn.close()
+                    return render_template("add_employee.html")
+                
+            # check department exists
+            department_query = "SELECT COUNT(*) FROM department WHERE dnumber = %s;"
+            cursor.execute(department_query, (dno,))
+            department_exists = cursor.fetchone()[0]
+            if not department_exists:
+                flash("Department number does not exist!", "error")
+                cursor.close()
+                conn.close()
+                return render_template("add_employee.html")
+            
+            # insert new employee into the employee table
+            insert_query = """INSERT INTO Employee
+            (Fname, Minit, Lname, Ssn, Address, Sex, Salary, Super_ssn, Dno, BDate, EmpDate)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+            cursor.execute(insert_query, 
+                           (fname, minit, lname, ssn, address, sex, 
+                            salary, super_ssn if super_ssn else None, 
+                            dno, bdate, empdate))
+            
+            # commit and close conn
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash("Employee added successfully!", "success")
+            return redirect(url_for("employee_management"))
+            
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+            
+    elif request.method == "GET":
+        return render_template("add_employee.html")
+
+@app.route("/employee_management/edit/<ssn>", methods=["GET", "POST"])
+def edit_employee(ssn):
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    
+    
+    
+    if request.method == "POST":
+        # get form data
+        address = request.form["address"].strip()
+        salary = request.form["salary"].strip()
+        dno = request.form["dno"].strip()
+        
+        # validate form data
+        if not address or not salary or not dno:
+            flash("All fields are required!", "error")
+            return redirect(url_for("edit_employee", ssn=ssn))
+        try:
+            # setup db
+            conn = get_db_connection()
+            cursor = conn.cursor() 
+            
+            # check department exists
+            department_query = "SELECT COUNT(*) FROM department WHERE dnumber = %s;"
+            cursor.execute(department_query, (dno,))
+            department_exists = cursor.fetchone()[0]
+            
+            if not department_exists:
+                flash("Department number does not exist!", "error")
+                cursor.close()
+                conn.close()
+                return redirect(url_for("edit_employee", ssn=ssn))
+            
+            # update employee info
+            update_query = """UPDATE Employee
+                              SET Address = %s,Salary = %s,DNo = %s
+                              WHERE ssn = %s;"""
+            cursor.execute(update_query, (address, salary, dno, ssn))
+            
+            # commit and close conn
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash("Employee info updated successfully!", "success")
+            return redirect(url_for("employee_management"))
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        
+        # update values from form
+    elif request.method == "GET":
+        # setup db
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # get employee info
+        employee_query = "SELECT FName, MInit, LName, ssn, Address, Salary, Dno FROM Employee WHERE ssn = %s;"
+        cursor.execute(employee_query, (ssn,))
+        employee = cursor.fetchone()
+        
+        if not employee:
+            flash("Employee not found!", "error")
+            cursor.close()
+            conn.close()
+            return redirect(url_for("employee_management"))
+        
+        employee_data = {
+            'FName': employee[0],
+            'MInit': employee[1],
+            'LName': employee[2],
+            'ssn': employee[3],
+            'Address': employee[4],
+            'Salary': int(employee[5]),
+            'Dno': employee[6]
+            }
+                        
+        # close conn
+        cursor.close()
+        conn.close()
+        
+    return render_template("edit_employee.html", employee=employee_data)
+
+@app.route("/employee_management/delete/<ssn>", methods=["POST", "GET"])
+def delete_employee(ssn):
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    
+    try:
+        # setup db
+        conn = get_db_connection()
+        cursor = conn.cursor() 
+        
+        # delete employee from the employee table
+        delete_query = "DELETE FROM Employee WHERE ssn = %s;"
+        cursor.execute(delete_query, (ssn,))
+        
+        # commit and close conn
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("Employee deleted successfully!", "success")
+    except IntegrityError:
+        cursor.close()
+        conn.close()
+        flash("Cannot delete employee: They are still assigned to projects, have dependents, or a supervisor/manager.", "error")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    return redirect(url_for("employee_management"))
+    
     
 # --- LOGIN AND REGISTER ---
 
@@ -268,6 +534,8 @@ def login_user():
 # projects list route
 @app.route("/projects")
 def projects_list():
+    if logged_in_user is None:
+        return redirect("/emptyHome")
     # Get sort parameter from query string (default to headcount DESC)
     sort_by = request.args.get('sort', 'headcount')
     order = request.args.get('order', 'DESC')
@@ -296,6 +564,8 @@ def projects_list():
 # project details route
 @app.route("/projects/<int:project_id>")
 def project_details(project_id):
+    if logged_in_user is None:
+        return redirect("/emptyHome")
     try:
         # setup db
         conn = get_db_connection()
@@ -321,6 +591,13 @@ def project_details(project_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@app.route("/logout")
+def logout():
+    global logged_in_user
+    logged_in_user = None
+    flash("You have been logged out.", "success")
+    return redirect(url_for("home"))
+
 def get_logged_in_user():
     return logged_in_user
 

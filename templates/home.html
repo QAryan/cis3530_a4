@@ -23,7 +23,7 @@
 </head>
 <body>
     <div class="header">
-      <h1 class="title">MyCompany</h1>
+      <h1>MyCompany</h1>
 
       <!-- TABS -->
       <div class="tabs">
@@ -41,6 +41,7 @@
             <button class="login-button" onclick="location.href='/register'">Register</button>
         {% else %}
             <p class="login-user">{{ user.name }}</p>
+            <button class="login-button" onclick="location.href='/logout'">Logout</button>
         {% endif %}
       </div>
     </div>
@@ -59,35 +60,38 @@
     {% endwith %}
     <body>
 
-    <h1>Employees</h1>
-      <form method="get" action="{{ url_for('home') }}" id="filterForm">
-    <!-- Department Filter -->
-    <label for="department">Filter by Department:</label>
-    <select name="department" id="department">
-        <option value="All" {% if selected_department == 'All' %}selected{% endif %}>All</option>
-        {% for dept in departments %}
-            <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
-        {% endfor %}
-    </select>
+    <div class="spacer">
+        <h1 class="title">Employees</h1>
+        <form class="filter-form" method="get" action="{{ url_for('home') }}" id="filterForm">
+            <!-- Department Filter -->
+            <label for="department">Filter by Department:</label>
+            <select class="filter-select" name="department" id="department">
+                <option value="All" {% if selected_department == 'All' %}selected{% endif %}>All</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
 
-    <!-- Name Search -->
-    <label for="name">Search by Name:</label>
-    <input type="text" name="name" id="name" value="{{ name_search }}" placeholder="Enter name...">
-    <button type="button" id="Search">Search</button>
-    <button type="button" id="clearSearch">Clear</button>
-    <!-- Sorting Options -->
-    <label for="sort_by">Sort by:</label>
-    <select name="sort_by" id="sort_by">
-        <option value="full_name" {% if sort_by=='full_name' %}selected{% endif %}>Name</option>
-        <option value="total_hours" {% if sort_by=='total_hours' %}selected{% endif %}>Hours</option>
-    </select>
+            <!-- Name Search -->
+            <label for="name">Search by Name:</label>
+            <input class="filter-input" type="text" name="name" id="name" value="{{ name_search }}" placeholder="Enter name...">
+            <button class="filter-button" type="button" id="Search">Search</button>
+            <button class="filter-button" type="button" id="clearSearch">Clear</button>
+            <!-- Sorting Options -->
+            <label for="sort_by">Sort by:</label>
+            <select class="filter-select" name="sort_by" id="sort_by">
+                <option value="full_name" {% if sort_by=='full_name' %}selected{% endif %}>Name</option>
+                <option value="total_hours" {% if sort_by=='total_hours' %}selected{% endif %}>Hours</option>
+            </select>
 
-    <label for="sort_order">Order:</label>
-    <select name="sort_order" id="sort_order">
-        <option value="asc" {% if sort_order=='asc' %}selected{% endif %}>Ascending</option>
-        <option value="desc" {% if sort_order=='desc' %}selected{% endif %}>Descending</option>
-    </select>
-</form>
+            <label for="sort_order">Order:</label>
+            <select class="filter-select" name="sort_order" id="sort_order">
+                <option value="asc" {% if sort_order=='asc' %}selected{% endif %}>Ascending</option>
+                <option value="desc" {% if sort_order=='desc' %}selected{% endif %}>Descending</option>
+            </select>
+        </form>
+    </div>
+    
     <table class="projects-table" style="margin-top: 16px;">
         <colgroup>
             <col class="col-name" />

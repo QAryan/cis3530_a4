@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Add Employee Page</title>
+</head>
+<body>
+    <div class="login-form-container">
+      <h1 class="login-form-title">Add Employee</h1>
+      <form method="POST" action="/employee_management/add">
+          <label class="login-form-label" for="fname">First Name:</label>
+          <input class="login-form-input" maxlength="20" type="text" id="fname" name="fname" required><br>
+
+          <label class="login-form-label" for="minit">Middle Initial:</label>
+          <input class="login-form-input" maxlength="1" type="text" id="minit" name="minit" required><br>
+
+          <label class="login-form-label" for="lname">Last Name:</label>
+          <input class="login-form-input" maxlength="30" type="text" id="lname" name="lname" required><br>
+
+          <label class="login-form-label" for="ssn">SSN:</label>
+          <input class="login-form-input" maxlength="9" minlength="9" type="text" id="ssn" name="ssn" required><br>
+
+          <label class="login-form-label" for="address">Address:</label>
+          <input class="login-form-input" maxlength="50" type="text" id="address" name="address" required><br>
+
+          <label class="login-form-label" for="sex">Sex:</label>
+          <input class="login-form-input" maxlength="1" type="text" id="sex" name="sex" required><br>
+
+          <label class="login-form-label" for="salary">Salary:</label>
+          <input class="login-form-input" type="number" id="salary" name="salary" required><br>
+
+          <label class="login-form-label" for="super_ssn">Supervisor SSN:</label>
+          <input class="login-form-input" maxlength="9" minlength="9" type="text" id="super_ssn" name="super_ssn"><br>
+
+          <label class="login-form-label" for="dno">Department Number:</label>
+          <input class="login-form-input" type="number" id="dno" name="dno" required><br>
+
+          <label class="login-form-label" for="bdate">Birth Date:</label>
+          <input class="login-form-input" type="date" id="bdate" name="bdate" required><br>
+
+          <label class="login-form-label" for="empdate">Employment Date:</label>
+          <input class="login-form-input" type="date" id="empdate" name="empdate" required><br>
+          <button class="login-form-button" type="submit">Add Employee</button>
+      </form>
+      <a class="login-form-link" href="/employee_management">Cancel</a>
+
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+</body>
+</html>
