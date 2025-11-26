@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Edit Employee Page</title>
+</head>
+<body>
+    <div class="login-form-container">
+      <h1 class="login-form-title">Edit Employee</h1>
+      <p>Editing info for {{ employee.FName }} {{ employee.MInit }} {{ employee.LName }} (SSN: {{ employee.ssn }})</p>
+      <form method="POST" action="/employee_management/edit/{{ employee.ssn }}">
+          <label class="login-form-label" for="address">Address:</label>
+          <input class="login-form-input" maxlength="50" type="text" id="address" name="address" value="{{ employee.Address }}" required><br>
+
+          <label class="login-form-label" for="salary">Salary:</label>
+          <input class="login-form-input" type="number" id="salary" name="salary" value="{{ employee.Salary }}" required><br>
+
+          <label class="login-form-label" for="dno">Department Number:</label>
+          <input class="login-form-input" type="number" id="dno" name="dno" value="{{ employee.Dno }}" required><br>
+
+          <button class="login-form-button" type="submit">Update Employee Info</button>
+      </form>
+      <a class="login-form-link" href="/employee_management">Cancel</a>
+
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+</body>
+</html>

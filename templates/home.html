@@ -5,10 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>{{ title }}</title>
+    <style>
+            /* Local-only styles to align the Projects table without touching global styles.css */
+            .projects-table { table-layout: fixed; width: 92%; margin: 0 auto; border-collapse: collapse; }
+            /* Column widths tuned to avoid header wrapping and match screenshot */
+            .projects-table col.col-num { width: 10%; }
+            .projects-table col.col-name { width: 30%; }
+            .projects-table col.col-dept { width: 24%; }
+            .projects-table col.col-hc { width: 12%; }
+            .projects-table col.col-dependents { width: 12%; }
+            .projects-table col.col-projects { width: 12%; }
+            .projects-table col.col-hours { width: 14%; }
+            .projects-table col.col-actions { width: 10%; }
+            .projects-table th, .projects-table td { border: 1px solid #ddd; padding: 10px 12px; }
+            .projects-table th { background-color: #2c5ea9; color: white; }
+    </style>
 </head>
 <body>
     <div class="header">
-      <h1 class="title">MyCompany</h1>
+      <h1>MyCompany</h1>
 
       <!-- TABS -->
       <div class="tabs">
@@ -26,6 +41,7 @@
             <button class="login-button" onclick="location.href='/register'">Register</button>
         {% else %}
             <p class="login-user">{{ user.name }}</p>
+            <button class="login-button" onclick="location.href='/logout'">Logout</button>
         {% endif %}
       </div>
     </div>
@@ -44,35 +60,46 @@
     {% endwith %}
     <body>
 
-    <h1>Employees</h1>
-      <form method="get" action="{{ url_for('home') }}" id="filterForm">
-    <!-- Department Filter -->
-    <label for="department">Filter by Department:</label>
-    <select name="department" id="department">
-        <option value="All" {% if selected_department == 'All' %}selected{% endif %}>All</option>
-        {% for dept in departments %}
-            <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
-        {% endfor %}
-    </select>
+    <div class="spacer">
+        <h1 class="title">Employees</h1>
+        <form class="filter-form" method="get" action="{{ url_for('home') }}" id="filterForm">
+            <!-- Department Filter -->
+            <label for="department">Filter by Department:</label>
+            <select class="filter-select" name="department" id="department">
+                <option value="All" {% if selected_department == 'All' %}selected{% endif %}>All</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
 
-    <!-- Name Search -->
-    <label for="name">Search by Name:</label>
-    <input type="text" name="name" id="name" value="{{ name_search }}" placeholder="Enter name...">
+            <!-- Name Search -->
+            <label for="name">Search by Name:</label>
+            <input class="filter-input" type="text" name="name" id="name" value="{{ name_search }}" placeholder="Enter name...">
+            <button class="filter-button" type="button" id="Search">Search</button>
+            <button class="filter-button" type="button" id="clearSearch">Clear</button>
+            <!-- Sorting Options -->
+            <label for="sort_by">Sort by:</label>
+            <select class="filter-select" name="sort_by" id="sort_by">
+                <option value="full_name" {% if sort_by=='full_name' %}selected{% endif %}>Name</option>
+                <option value="total_hours" {% if sort_by=='total_hours' %}selected{% endif %}>Hours</option>
+            </select>
 
-    <!-- Sorting Options -->
-    <label for="sort_by">Sort by:</label>
-    <select name="sort_by" id="sort_by">
-        <option value="full_name" {% if sort_by=='full_name' %}selected{% endif %}>Name</option>
-        <option value="total_hours" {% if sort_by=='total_hours' %}selected{% endif %}>Hours</option>
-    </select>
-
-    <label for="sort_order">Order:</label>
-    <select name="sort_order" id="sort_order">
-        <option value="asc" {% if sort_order=='asc' %}selected{% endif %}>Ascending</option>
-        <option value="desc" {% if sort_order=='desc' %}selected{% endif %}>Descending</option>
-    </select>
-</form>
-    <table>
+            <label for="sort_order">Order:</label>
+            <select class="filter-select" name="sort_order" id="sort_order">
+                <option value="asc" {% if sort_order=='asc' %}selected{% endif %}>Ascending</option>
+                <option value="desc" {% if sort_order=='desc' %}selected{% endif %}>Descending</option>
+            </select>
+        </form>
+    </div>
+    
+    <table class="projects-table" style="margin-top: 16px;">
+        <colgroup>
+            <col class="col-name" />
+            <col class="col-dept" />
+            <col class="col-dependents" />
+            <col class="col-projects" />
+            <col class="col-hours" />
+        </colgroup>
         <tr>
             <th>Full Name</th>
             <th>Department</th>
@@ -93,7 +120,9 @@
     </table>
 <script>
     const form = document.getElementById('filterForm');
-
+    const clearBtn = document.getElementById('clearSearch');
+    const nameInput = document.getElementById('name');
+    const searchBtn = document.getElementById('Search');
     // Submit form whenever a filter or sort option changes
     document.getElementById('department').addEventListener('change', () => form.submit());
     document.getElementById('sort_by').addEventListener('change', () => form.submit());
@@ -105,10 +134,13 @@
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
 }
-
+searchBtn.addEventListener('click', () => form.submit());
 // Submit form after user stops typing for 300ms
-const nameInput = document.getElementById('name');
-nameInput.addEventListener('keyup', debounce(() => form.submit(), 300));
+clearBtn.addEventListener('click', () => {
+    nameInput.value = '';
+    form.submit();
+});
+// nameInput.addEventListener('keyup', debounce(() => form.submit(), 300));
 </script>
 </body>
 </html>

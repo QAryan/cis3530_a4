@@ -22,7 +22,7 @@
 </head>
 <body>
     <div class="header">
-      <h1 class="title">MyCompany</h1>
+      <h1>MyCompany</h1>
       <div class="tabs">
           <button class="tab" onclick="location.href='/'">Employees</button>
           <button class="tab-hovered" onclick="location.href='/projects'">Projects</button>
@@ -36,6 +36,7 @@
             <button class="login-button" onclick="location.href='/register'">Register</button>
         {% else %}
             <p class="login-user">{{ user.name }}</p>
+            <button class="login-button" onclick="location.href='/logout'">Logout</button>
         {% endif %}
       </div>
     </div>

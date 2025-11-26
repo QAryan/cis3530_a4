@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>{{ title }}</title>
+    <style>
+            /* Local-only styles to align the Projects table without touching global styles.css */
+            .projects-table { table-layout: fixed; width: 92%; margin: 0 auto; border-collapse: collapse; }
+            /* Column widths tuned to avoid header wrapping and match screenshot */
+            .projects-table col.col-num { width: 10%; }
+            .projects-table col.col-name { width: 30%; }
+            .projects-table col.col-dept { width: 24%; }
+            .projects-table col.col-hc { width: 12%; }
+            .projects-table col.col-hours { width: 14%; }
+            .projects-table col.col-actions { width: 10%; }
+            .projects-table th, .projects-table td { border: 1px solid #ddd; padding: 10px 12px; }
+            .projects-table th { background-color: #2c5ea9; color: white; }
+    </style>
 </head>
 <body>
     <div class="header">
-      <h1 class="title">MyCompany</h1>
+      <h1>MyCompany</h1>
 
       <!-- TABS -->
       <div class="tabs">
@@ -26,9 +39,12 @@
             <button class="login-button" onclick="location.href='/register'">Register</button>
         {% else %}
             <p class="login-user">{{ user.name }}</p>
+            <button class="login-button" onclick="location.href='/logout'">Logout</button>
         {% endif %}
       </div>
     </div>
+
+    <div class="spacer"></div>
 
     <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -40,5 +56,29 @@
         </ul>
       {% endif %}
     {% endwith %}
+    <h1 class="title">Departments</h1>
+    <table class="projects-table">
+      <colgroup>
+        <col class="col-num">
+        <col class="col-name">
+        <col class="col-dept">
+        <col class="col-hc">
+        <col class="col-hours">
+      <tr>
+        <th>Department ID</th>
+        <th>Department Name</th>
+        <th>Manager</th>
+        <th>Number of Employees</th>
+        <th>Total Hours</th>
+      </tr>
+      {% for dept in departments %}
+      <tr>
+        <td>{{ dept.Dname }}</td>
+        <td>{{ dept.Dnumber }}</td>
+        <td>{{ dept.MgrName }}</td>
+        <td>{{ dept.NumEmployees }}</td>
+        <td>{{ dept.TotalHours}}</td>
+      </tr>
+      {% endfor %}
 </body>
 </html>

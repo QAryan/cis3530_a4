@@ -1,6 +1,10 @@
 # cis3530_a4
 Assignment 4 for CIS*3530: Databases. The goal of this project is to build a small, data-driven web application using Flask and raw SQL.
-
+# Indexes
+## idx_workson_pno ON Works_On (Pno)
+This index on the project number in the works on table helps speed up the aggregation of the list of employees and hours on each of the project details pages.
+## idx_employee_ssn ON Employee (Ssn)
+this index on the employee ssn in the Employee table helps to speed up the insertion of new employees and for checking if a new employees manager ssn exists. this index allows for quickly checking if a ssn exist in the table instead of having to check every record everytime a new employee is trying to be inserted.
 # Setup
 
 ## 1. Setup environment
