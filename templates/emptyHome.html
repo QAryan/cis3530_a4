@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{{ title }}</title>
+</head>
+<body>
+    <div class="header">
+      <h1 class="title">MyCompany</h1>
+
+      <!-- TABS -->
+      <div class="tabs">
+          
+          <button class="tab" onclick="location.href='/login'">Login</button>
+          <button class="tab" onclick="location.href='/register'">Register</button>
+          
+      </div>
+
+      
+</body>
+</html>

@@ -28,12 +28,78 @@ logged_in_user = None;
 # home route
 @app.route("/")
 def home():
+    department = request.args.get("department") or ""
+    nameSearch = request.args.get("name") or ""
+    sort_by = request.args.get("sort_by") or "full_name"
+    sort_order = request.args.get("sort_order") or "asc"
+    if department == "All":
+        department = ""
+    if sort_by == "total_hours":
+       sort_by = "coalesce(total_hours,0)"
+   # if sort_order not in ["asc", "desc"]:
+   #     sort_order = "asc"
+    
+    query = f"""select concat(fname,' ',minit,'. ' ,lname) as full_name,
+    dname as department,
+    coalesce(number_of_dependents,0) as dependents,
+   coalesce(number_of_projects,0),
+    coalesce(total_hours,0)
+    from employee
+    left join
+    (select essn, count(essn) as number_of_dependents
+    from dependent
+    group by(essn)
+    having count(essn) >= 1) as d on employee.ssn = d.essn
+    left join
+    department on employee.dno = department.dnumber
+    left join 
+    (select essn, count(essn) as number_of_projects
+    from works_on
+    group by(essn)
+    having count(essn) >= 1) as p on employee.ssn = p.essn
+    left join
+    (select essn, sum(hours) as total_hours
+    from works_on
+    group by(essn)) as h on h.essn = employee.ssn
+    where department.dname like '%{department}%'
+    and concat(fname,' ',minit,'. ' ,lname) ILIKE '%{nameSearch}%'
+    ORDER BY {sort_by} {sort_order};"""
+    
+    departmentQuery = "select dname from department;"
+    if logged_in_user is None:
+        return redirect("/emptyHome")
+    
+     # setup db
+   
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    employees = [
+                    {"FullName": r[0], "Department": r[1], "Dependents": r[2], "Projects": r[3], "Hours": r[4]} for r in rows
+                ]
+    cursor.execute(departmentQuery)
+    deptRows = cursor.fetchall()
+    departments = [r[0] for r in deptRows]
+    cursor.close()
+    conn.close()
     
     return render_template("home.html", 
                                  title="Home Page", 
+                                 user=logged_in_user,
+                                    employees=employees,
+                                    selected_department=department,
+                                    departments=departments,
+                                    name_search=nameSearch,
+                                    sort_by=sort_by,
+                                    sort_order=sort_order
+                                 )
+@app.route("/emptyHome")
+def empty_home():
+    return render_template("emptyHome.html", 
+                                 title="Home Page", 
                                  user=logged_in_user
                                  )
-
 # projects route
 @app.route("/projects")
 def projects():
