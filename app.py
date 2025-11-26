@@ -36,15 +36,15 @@ def home():
     if department == "All":
         department = ""
     if sort_by == "total_hours":
-       sort_by = "coalesce(total_hours,0)"
+       sort_by = "total_hours"
    # if sort_order not in ["asc", "desc"]:
    #     sort_order = "asc"
     
-    query = f"""select concat(fname,' ',minit,'. ' ,lname) as full_name,
+    query = sql.SQL("""select concat(fname,' ',minit,'. ' ,lname) as full_name,
     dname as department,
     coalesce(number_of_dependents,0) as dependents,
    coalesce(number_of_projects,0),
-    coalesce(total_hours,0)
+    coalesce(total_hours,0) as total_hours
     from employee
     left join
     (select essn, count(essn) as number_of_dependents
@@ -62,9 +62,13 @@ def home():
     (select essn, sum(hours) as total_hours
     from works_on
     group by(essn)) as h on h.essn = employee.ssn
-    where department.dname like '%{department}%'
-    and concat(fname,' ',minit,'. ' ,lname) ILIKE '%{nameSearch}%'
-    ORDER BY {sort_by} {sort_order};"""
+    where department.dname like {department}
+    and concat(fname,' ',minit,'. ' ,lname) ILIKE {nameSearch}
+    ORDER BY {sort_by} {sort_order};""").format(
+        sort_by=sql.Identifier(sort_by),
+        sort_order=sql.SQL(sort_order.upper()),
+        department=sql.Literal(f"%{department}%"),
+        nameSearch=sql.Literal(f"%{nameSearch}%") )
     
     departmentQuery = "select dname from department;"
     if logged_in_user is None:
